@@ -1,0 +1,269 @@
+<html lang="pt">
+    <title>Jornal do Aniversário</title>
+    <link rel="stylesheet" href="css.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <body>
+        <div
+            class="col-12 col-lg-5 col-xl-4 col-md-7 float-lg-left mb-lg-0 mb-4"
+            id="menu">
+            <div class="card card-body"
+                data-form-type="other">
+                <div class="form-group mb-1">
+                    <label for="name" class="col-form-label pb-0">Nome:</label>
+                    <input type="text" class="form-control" maxlength="30"
+                        placeholder="Primeiro e último nome..."
+                        id="previewForm_name"
+                        data-form-type="other">
+                </div>
+                <div class="form-group">
+                    <label for="dateTextBox" class="col-form-label pb-0">Data de
+                        Nascimento:</label>
+                    <div class="input-group date">
+                        <input type="date" id="previewForm_date"
+                            class="form-control"
+                            placeholder="Data de Nascimento..."
+                            value="1970-01-01"
+                            min="1920-01-01" max="2006-12-31"
+                            data-form-type="date">
+                    </div>
+                    <script type="text/javascript">
+                    function checkDateInputSupported() {
+                        var input = document.createElement('input'); input.setAttribute('type', 'date'); var notADateValue = 'not-a-date';
+                        input.setAttribute('value', notADateValue); return (input.value !== notADateValue);
+                    }
+                    function invalidDateError() { alert('A data que indicou não é válida.'); }
+                    function validateDate(date) { if (date >= 1920 && date <= 2006) { return true; } else { alert('Infelizmente a data que indicou não está disponível.\nPor favor introduza um dia entre 1920 e 2006.'); return false; }}
+
+                    if (!checkDateInputSupported()) { // date input not supported - probably we are using IE
+                        $('#previewForm_date').val("01/01/1970");
+                        $('#dateTextBox').addClass('input-group');
+                        $(document).ready(function () {
+                            $('.input-group.date').datepicker({
+                                format: "dd/mm/yyyy", weekStart: 1,
+                                startDate: "01/01/1920", endDate: "31/12/2006",
+                                startView: 3, maxViewMode: 3, language: "pt",
+                                orientation: "bottom left", autoclose: true, calendarWeeks: false, showWeekDays: false,
+                                defaultViewDate: { year: 1970, month: 1, day: 1 }
+                            });
+                        });
+                    }
+                </script>
+                </div>
+                <button type="submit" class="btn btn-primary"
+                    onclick="startCreatePreview(1,'https://thebirthdaytimes-service.azurewebsites.net/GetThumbnail','' ); return false;"
+                    data-form-type="action">Consultar</button>
+                <button class="btn btn-primary" id="generate-pdf">Download PDF</button>
+            </div>
+            <br>
+        </div>
+
+        <script>
+    $("#generate-pdf").click(function() {
+        $("#menu").hide();
+        window.print();
+        $("#menu").show();
+
+    });
+    function requestNewThumbnail() {
+        var n = {
+            name: formData.name,
+            date: formData.date,
+            language: formData.languageID,
+            presidentArticle: $("#createdPreview_president").val(),
+            customZodiacTitle: $("#createdPreview_customZodiacTitle").val(),
+            customZodiacArticle: $("#createdPreview_customZodiacArticle").val()
+        };
+        $.ajax({
+            type: "POST",
+            url: thumbnailServiceURL,
+            data: JSON.stringify(n),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: onSuccessCall,
+
+        })
+    }
+    function getStyleStringFromCoords(n, t, i, r, u) {
+        var e = 595
+        , f = 842
+        , o = $("#newspaper_container").width()
+        , s = o * (e / f)
+        , h = r / e * 100
+        , c = u / f * 100
+        , l = o * h / 100
+        , a = s * c / 100
+        , v = o * (t / e) / l * 100
+        , y = f - i
+        , p = s * (y / f) / a * 100;
+        return " width: " + h + "%; height: " + c + "%; transform: translate(" + v + "%, " + p + "%);"
+    }
+    function setButtonPosStyle(n, t, i, r) {
+        var f = i.x, e = i.y, u;
+        r === "right" && (f += i.width);
+        u = getStyleStringFromCoords(t, f, e, i.width, i.height);
+        r === "left" && (u += " left:-1.5rem;");
+        n.attr("style", u)
+    }
+    function changePublicity(n, t) {
+        console.log("changePublicity");
+        var i = n.attr("src"), r, u, f;
+        for (i = i.substring(i.lastIndexOf("/") + 1),
+        i = i.substring(0, i.lastIndexOf(".")),
+        r = 0,
+        u = 0; u < t.length; u++)
+            if (i === t[u]) {
+                r = u;
+                break
+            }
+        r++;
+        r === t.length && (r = 0);
+        f = t[r];
+        $("#createdPreview_publicity").val(f);
+        n.attr("src", n.attr("src").replace("/" + i + ".png", "/" + f + ".png"))
+    }
+    function renderPreviewFromJSON(n) {
+        var o, r, s, h, t, i, u, c, l, f, e, a, v, y, p, w, b, k;
+
+            o = 'PT' === 3;
+            $("#divImageHolder").empty();
+            $("#newspaper_container").removeClass("sample_mode");
+            $("#divThumbsHolder").empty();
+            $("#sample_newspaper").empty();
+            r = 'PT';
+            s = $("#sample_newspaper");
+            s.attr("src", urlCDN + "https://www.jornaldoaniversario.pt/images/Sample" + r + "_blank.png");
+            for (h in n.articles) {
+                t = n.articles[h];
+                i = urlCDN + "https://www.jornaldoaniversario.pt/ThumbImages/";
+                switch (t.type) {
+                case 0:
+                    i += "Presidents/";
+                    break;
+                case 1:
+                    i += "Zodiac/";
+                    break;
+                case 2:
+                    i += "History/";
+                    break;
+                case 3:
+                    i += "Cinema/";
+                    break;
+                case 4:
+                    i += "Publicity/";
+                    break;
+                case 5:
+                    i += "Cars/";
+                    break;
+                case 6:
+                    i += "CustomArticles/"
+                }
+                if (t.image !== null && (t.type === 4 && $("#createdPreview_publicity").val() !== "" && (t.image.name = $("#createdPreview_publicity").val()),
+                t.type !== 7 && t.type !== 1 && t.type !== 3 && (i += r + "/"),
+                i += t.image.name + ".png",
+                u = getStyleStringFromCoords('PT', t.image.x, t.image.y, t.image.width, t.image.height),
+                c = "<img id='articleImageType" + t.type + "' src='" + i + "' class='previewThumb' style='" + u + "' />",
+                $("#divThumbsHolder").append(c),
+                t.type === 4)) {
+                    $("#createdPreview_publicity").val(t.image.name);
+                    l = $("<div name='articleSwitchControl' class='newsblockClickable' style='" + u + "' />").appendTo("#divThumbsHolder");
+                    f = $("<div name='articleSwitchControl' class='newsblockButtonClickable'><i class='fas p-1 fa-undo-alt bg-primary text-white' style='opacity:0.5'><\/i><\/div>").appendTo("#divThumbsHolder");
+                    setButtonPosStyle(f, 'PT', t.image, "left");
+                    e = function() {
+                        changePublicity($("#articleImageType4"), n.publicity)
+                    }
+                    ;
+                    l.on("click", e);
+                    f.on("click", e);
+                    changePublicity($("#articleImageType4"), n.publicity);
+                }
+                t.type === 0 && o && (a = getStyleStringFromCoords('PT', t.x, t.y, t.width, t.height),
+                $("#divThumbsHolder").append("<div id='presidentArticleOverlay' onclick='swithPresidentArticle()' class='newsblockClickable' style='" + a + "' />"),
+                v = $("<div onclick='swithPresidentArticle()' class='newsblockButtonClickable'><i class='fas p-1 fa-undo-alt bg-primary text-white' style='opacity:0.5'><\/i><\/div>").appendTo("#divThumbsHolder"),
+                setButtonPosStyle(v, 'PT', t.image, "left"));
+                t.type === 1 && (y = getStyleStringFromCoords('PT', t.x, t.y, t.width, t.height),
+                t.custom && t.oversize && $("#customArticleOverSize").modal("show"))
+            }
+            w = "<img class='overlap' src='" + urlCDN + "https://www.jornaldoaniversario.pt/ThumbImages/cover-btimes-PT.jpg' />";
+            $("#divImageHolder").append(w);
+            b = "<img class='overlap' src='data:image/jpg;base64," + n.data + "'/>";
+            $("#divImageHolder").append(b);
+            
+    }
+    function onSuccessCall(n) {
+        formData.presidentArticle === "VisitsTheBaby" ? dataGenerate1 = n : dataGenerate2 = n;
+        renderPreviewFromJSON(n);
+        $("#newspaper_container > .minor_spinner").hide()
+    }
+    function onError() {
+        loadingHide();
+        alert("Oops! Something went wrong. Please try again later.")
+    }
+    function startCreatePreview(n, t, i) {
+        var e, s, u, f, r, o;
+        formData = {
+            name: "",
+            year: "0",
+            month: "0",
+            day: "0",
+            data: "",
+            languageID: 0,
+            presidentArticle: "VisitsTheBaby",
+            customZodiacTitle: "",
+            customZodiacArticle: ""
+        };
+        formData.languageID = n;
+        thumbnailServiceURL = t;
+        urlCDN = i;
+        dataGenerate1 = null;
+        dataGenerate2 = null;
+        e = $("#previewForm_name").val();
+        s = $("#previewForm_date").val();
+            if (checkDateInputSupported()) {
+                o = s.split("-");
+                u = parseInt(o[0]);
+                f = parseInt(o[1]);
+                day = parseInt(o[2]);
+            } else {
+                r = s.split("/");
+                
+                if (n === Languages.US) {
+                    u = parseInt(r[2]);
+                    f = parseInt(r[0]);
+                    day = parseInt(r[1]);
+                } else if (n === Languages.CA) {
+                    f = parseInt(r[1]);
+                    day = parseInt(r[2]);
+                    u = parseInt(r[0]);
+                } else {
+                    u = parseInt(r[2]);
+                    f = parseInt(r[1]);
+                    day = parseInt(r[0]);
+                }
+            }
+            formData.name = e;
+            formData.year = u;
+            formData.month = f;
+            formData.day = day;
+            formData.date = u + "-" + f + "-" + day;
+            formData.customZodiacTitle = "";
+            formData.customZodiacArticle = "";
+            requestNewThumbnail()
+    }
+    </script>
+
+        <div id="preview_newspaper_card">
+            <div id="newspaper_container">
+                <img id="sample_newspaper"
+                    src="https://www.jornaldoaniversario.pt/images/SamplePT_blank.png"
+                    width="100%">
+                <div id="divImageHolder">
+                    <img class="overlap"
+                        src="https://www.jornaldoaniversario.pt/ThumbImages/cover-btimes-PT.jpg">
+                    <img class="overlap">
+                </div>
+                <div id="divThumbsHolder">
+                </div>
+            </div>
+        </body>
+    </html>
