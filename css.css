@@ -1,8 +1,18 @@
+@media print {
+    body {
+        margin: 0;
+    }
+
+    .page {
+        page-break-before: always;
+    }
+}
+
 @font-face {
     font-family:'BirthdayTimesMain';
     font-display:auto;
-    src:url('/css/fonts/JornalAniversario.eot?');
-    src:url('/css/fonts/JornalAniversario.eot?#iefix') format('embedded-opentype'),url('/css/fonts/JornalAniversario.woff') format('woff'),url('/css/fonts/JornalAniversario.ttf') format('truetype');
+    src:url('https://www.jornaldoaniversario.pt/css/fonts/JornalAniversario.eot?');
+    src:url('https://www.jornaldoaniversario.pt/css/fonts/JornalAniversario.eot?#iefix') format('embedded-opentype'),url('https://www.jornaldoaniversario.pt/css/fonts/JornalAniversario.woff') format('woff'),url('https://www.jornaldoaniversario.pt/css/fonts/JornalAniversario.ttf') format('truetype');
     font-weight:normal;
     font-style:normal
 }
@@ -536,44 +546,6 @@ html,body {
 }
 .footer-since {
     font-size:.75em
-}
-#banner.US {
-    background-image:url("../images/banner-image-mobile-US.png")
-}
-#banner.UK {
-    background-image:url("../images/banner-image-mobile-UK.png")
-}
-#banner.AU {
-    background-image:url("../images/banner-image-mobile-AU.png")
-}
-#banner.CA {
-    background-image:url("../images/banner-image-mobile-CA.png")
-}
-#banner.PT {
-    background-image:url("../images/banner-image-mobile-PT.png")
-}
-#banner.BR {
-    background-image:url("../images/banner-image-mobile-BR.png")
-}
-@media(min-width:768px) {
-    #banner.US {
-        background-image:url("../images/banner-image-US.png") !important
-    }
-    #banner.CA {
-        background-image:url("../images/banner-image-CA.png") !important
-    }
-    #banner.AU {
-        background-image:url("../images/banner-image-AU.png") !important
-    }
-    #banner.UK {
-        background-image:url("../images/banner-image-UK.png") !important
-    }
-    #banner.PT {
-        background-image:url("../images/banner-image-PT.png") !important
-    }
-    #banner.BR {
-        background-image:url("../images/banner-image-BR.png") !important
-    }
 }
 @media only screen and (min-width:576px) {
     .sample-disclaimer,.sample-disclaimer-condensed {
