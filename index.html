@@ -61,7 +61,10 @@
         <script>
     $("#generate-pdf").click(function() {
         $("#menu").hide();
-        window.print();
+        window.print({
+            "pageRange": "1",
+            "margin": "0"
+        });
         $("#menu").show();
 
     });
