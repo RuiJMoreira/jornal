@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Horas</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Total Horas</h1>
+    <p><b>1 - Escolhe as datas</b></p>
+    <label for="startDateInput">Start Date:</label><br>
+    <input type="date" id="startDateInput"><br>
+    <label for="endDateInput">End Date:</label><br>
+    <input type="date" id="endDateInput"><br><br>
+    <label>
+        <input type="checkbox" id="workTypeCheckbox"> Remoto?
+    </label><br>
+    <p><b>2 - Gera o link, clica no link e copia o conteúdo dessa página</b></p>
+    <button onclick="generateLink()">Gerar link</button><br>
+
+    <p id="link"></p>
+    <p><b>3 - Cola o conteúdo na caixa de texto e clica em calcular</b></b></p>
+    <label for="jsonInput">Conteúdo:</label><br>
+    <textarea id="jsonInput" rows="10" cols="50"></textarea><br><br>
+    <button onclick="calculateTotalHours()">Calcular</button><br>
+    <p id="totalHours"></p>
+
+    <table id="hoursTable">
+        <thead>
+            <tr>
+                <th>Entrada</th>
+                <th>Almoço</th>
+                <th>Saída</th>
+                <th>Total Horas</th>
+                <th>Hora extra</th>
+            </tr>
+        </thead>
+        <tbody id="hoursTableBody">
+        </tbody>
+    </table>
+    <p><span style="color: red;">◼</span> - Menos de 8 horas</p>
+
+    <script>
+        function generateLink() {
+            const startDate = document.getElementById("startDateInput").value;
+            const endDate = document.getElementById("endDateInput").value;
+            const workType = document.getElementById("workTypeCheckbox").checked ? "remoteWork" : "presences";
+            const link = `https://hr.biziq.app/humanResources/company/calendar/${workType}?profile=true&start=${startDate}&end=${endDate}`;
+            document.getElementById("link").innerHTML = `<a href="${link}" target="_blank">${link}</a>`;
+        }
+
+        function calculateTotalHours() {
+            const jsonData = document.getElementById("jsonInput").value;
+            try {
+                const data = JSON.parse(jsonData);
+                let totalHoursWorked = 0;
+                let totalExtraHours = 0; // Initialize total extra hours
+                const tableBody = document.getElementById("hoursTableBody");
+                tableBody.innerHTML = ''; // Clear table body
+                for (const entry of data) {
+                    const start = new Date(entry.start);
+                    const end = new Date(entry.end);
+                    const lunchHoursParts = entry.lunch_hours.split(":");
+                    let lunchHours = (parseInt(lunchHoursParts[0]) * 60 + parseInt(lunchHoursParts[1])) * 60000;
+                    if (lunchHours === 0) {
+                        lunchHours = 3600000; // 1 hour in milliseconds
+                    }
+                    const totalHours = new Date(end - start - lunchHours);
+                    totalHoursWorked += totalHours.getTime();
+
+
+
+                    // Calculate extra hours
+                    const extraHours = totalHours.getTime() - 8 * 60 * 60 * 1000;
+                    if (extraHours > 0) {
+                        totalExtraHours += extraHours; // Add extra hours only if positive
+                    }
+
+                    // Highlight days with less than 8 hours
+                    const isLessThan8Hours = totalHours.getTime() < 8 * 60 * 60 * 1000;
+                    const rowColor = isLessThan8Hours ? 'red' : '';
+
+                    // Display lunch message
+                    let lunchMessage = entry.lunch_hours;
+                    if (lunchMessage === "00:00") {
+                        lunchMessage = "S/ hora registada - consideramos 1 hora de almoço por defeito";
+                    }
+
+                    // Add row to table
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+            <td style="background-color: ${rowColor}">${start.toLocaleString()}</td>
+            <td style="background-color: ${rowColor}">${lunchMessage}</td>
+            <td style="background-color: ${rowColor}">${end.toLocaleString()}</td>
+            <td style="background-color: ${rowColor}">${totalHours.toISOString().substr(11, 8)}</td>
+            <td style="background-color: ${rowColor}">${extraHours > 0 ? formatHours(extraHours) : 'S/horas extra'}</td>
+          `;
+                    tableBody.appendChild(row);
+                }
+                const totalHoursFormatted = new Date(totalHoursWorked).toISOString().substr(11, 8);
+                document.getElementById("totalHours").innerText = `Total horas trabalhadas: ${totalHoursFormatted}`;
+                const totalExtraHoursFormatted = formatHours(totalExtraHours);
+                document.getElementById("totalHours").innerText += `\nTotal horas extra: ${totalExtraHoursFormatted}`;
+
+            } catch (error) {
+                document.getElementById("totalHours").innerText = "Ocorreu um erro, tenta copiar tudo de novo.";
+            }
+        }
+
+        function formatHours(milliseconds) {
+            const hours = Math.floor(milliseconds / (1000 * 60 * 60));
+            const minutes = Math.floor((milliseconds % (1000 * 60 * 60)) / (1000 * 60));
+            return `${hours} horas ${minutes} minutos`;
+        }
+    </script>
+
+</body>
+
+</html>
